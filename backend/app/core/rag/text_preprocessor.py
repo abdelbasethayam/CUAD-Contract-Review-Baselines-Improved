@@ -15,21 +15,22 @@ _WS_RE: Final = re.compile(r"\s+")
 _MULTI_PUNCT_RE: Final = re.compile(r"([.!?]){2,}")
 
 # Conservative expansions only; do not invent meaning.
+# Use lookarounds instead of \b because '.' is a non-word character.
 _ABBREVIATIONS: Final[dict[str, str]] = {
-    r"\bincl\.\b": "including",
-    r"\bexcl\.\b": "excluding",
-    r"\bw/\b": "with",
-    r"\bw/o\b": "without",
-    r"\be\.g\.\b": "for example",
-    r"\bi\.e\.\b": "that is",
-    r"\betc\.\b": "etcetera",
-    r"\bvs\.\b": "versus",
-    r"\bart\.\b": "article",
-    r"\bsec\.\b": "section",
-    r"\bpara\.\b": "paragraph",
-    r"\bapprox\.\b": "approximately",
-    r"\bmax\.\b": "maximum",
-    r"\bmin\.\b": "minimum",
+    r"(?i)(?<!\w)incl\.(?!\w)": "including",
+    r"(?i)(?<!\w)excl\.(?!\w)": "excluding",
+    r"(?i)(?<!\w)w/(?!\w)": "with",
+    r"(?i)(?<!\w)w/o(?!\w)": "without",
+    r"(?i)(?<!\w)e\.g\.(?!\w)": "for example",
+    r"(?i)(?<!\w)i\.e\.(?!\w)": "that is",
+    r"(?i)(?<!\w)etc\.(?!\w)": "etcetera",
+    r"(?i)(?<!\w)vs\.(?!\w)": "versus",
+    r"(?i)(?<!\w)art\.(?!\w)": "article",
+    r"(?i)(?<!\w)sec\.(?!\w)": "section",
+    r"(?i)(?<!\w)para\.(?!\w)": "paragraph",
+    r"(?i)(?<!\w)approx\.(?!\w)": "approximately",
+    r"(?i)(?<!\w)max\.(?!\w)": "maximum",
+    r"(?i)(?<!\w)min\.(?!\w)": "minimum",
 }
 
 
@@ -51,7 +52,7 @@ def normalize_quotes(text: str) -> str:
 def expand_legal_abbreviations(text: str) -> str:
     out = text
     for pattern, replacement in _ABBREVIATIONS.items():
-        out = re.sub(pattern, replacement, out, flags=re.IGNORECASE)
+        out = re.sub(pattern, replacement, out)
     return out
 
 
@@ -59,9 +60,12 @@ def collapse_repeated_punctuation(text: str) -> str:
     return _MULTI_PUNCT_RE.sub(r"\1", text)
 
 
-def preprocess_clause(text: str, *,
-                      expand_abbrevs: bool = True,
-                      normalize: bool = True) -> str:
+def preprocess_clause(
+    text: str,
+    *,
+    expand_abbrevs: bool = True,
+    normalize: bool = True,
+) -> str:
     """Return a cleaned clause suitable for embedding and prompting.
 
     Parameters
